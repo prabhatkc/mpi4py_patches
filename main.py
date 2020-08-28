@@ -47,7 +47,7 @@ if __name__ == '__main__':
 	args.input_gen_folder 			= "quarter_3mm_sharp_sorted" #input/low dose folder name
 	args.target_gen_folder			= "full_3mm_sharp_sorted" #target/high dose folder name
 	args.channel 					= 1
-
+    args.shuffle_patches            = False
 	# number of random images from each sub-folders used to formulate the h5 training set instead of all the images from
 	# all input-target subfolders
 	if args.random_N: args.N_rand_imgs = 7 
