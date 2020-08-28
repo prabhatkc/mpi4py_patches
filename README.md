@@ -44,8 +44,10 @@ optional arguments:
 ### Example usage
 
 `$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold<br>
-or<br>
-$ chmod +x gen_patches.sh<br>
+or
+
+$ chmod +x gen_patches.sh
+
 $ ./gen_patches
 `
 
