@@ -47,7 +47,7 @@ $ ./gen_patches
 ### Package requirements
 
 install mpicc compiler from https://www.open-mpi.org/faq/?category=building<br>
-use pip to install - mpi4py, numpy, h5py, matplotlib, pydicom, glob, random 
+use pip to install - mpi4py, numpy, h5py, matplotlib, pydicom, glob, random, opencv-python
 
 ### References
 Some demo images in the raw_data folder are imported from the Low Dose CT Grand Challenge<br>
