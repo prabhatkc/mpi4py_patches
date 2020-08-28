@@ -33,7 +33,7 @@ if __name__ == '__main__':
 	#-------------------------------------------------------------------------------------------------------------------------
 	# in-built additional options
 	#-------------------------------------------------------------------------------------------------------------------------
-	args.scale 						= 1 # for now all low dose and high dose complimentary pairs are of same scale and no upscaling/downscaling is required
+	args.scale 					= 1 # for now all low dose and high dose complimentary pairs are of same scale and no upscaling/downscaling is required
 	padding_options					= {'p96':12, 'p75':11, 'p64':4, 'p55':8, 'p42':6, 'p32':4, 'p24':4, 'p12':4}
 	args.lr_padding 				= padding_options[args.patch_size]
 	patch_option 					= {'p96':[84 + args.lr_padding, 84 + args.lr_padding], 'p75':[64 + args.lr_padding, 64 + args.lr_padding], \
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 									   'p42':[36 + args.lr_padding, 36 + args.lr_padding], 'p32':[28 + args.lr_padding, 28 + args.lr_padding],\
 									   'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
 	args.input_size, args.label_size= patch_option[args.patch_size]
-	args.lr_stride 		   			= int(args.input_size - args.lr_padding)
+	args.lr_stride 		   		= int(args.input_size - args.lr_padding)
 	args.sanity_plot_check 			= True # random patch plots to ensure input-target patches are indeed complimentatry
 	args.input_gen_folder 			= "quarter_3mm_sharp_sorted" #input/low dose folder name
 	args.target_gen_folder			= "full_3mm_sharp_sorted" #target/high dose folder name
