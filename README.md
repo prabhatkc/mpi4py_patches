@@ -2,12 +2,9 @@
 
 ### Highlight
 
-(1) Performs patch based feature extracting from raw training set in Parallel
-
-(2) Includes different options for data normalization
-
-(3) Includes translation and scaling based augmentation
-
+(1) Performs patch based feature extracting from raw training set in Parallel<br>
+(2) Includes different options for data normalization<br>
+(3) Includes translation and scaling based augmentation<br>
 (4) Includes air thresholding to discard non-contrast regions
 
 ```
@@ -43,13 +40,10 @@ optional arguments:
 
 ### Example usage
 
-`$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold<br>
-or
-
+`$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold`<br>
+or<br>
 $ chmod +x gen_patches.sh
-
 $ ./gen_patches
-`
 
 ### Package requirements
 
