@@ -16,25 +16,20 @@ Storing input-target images as patches in h5 format from all patient data / cate
 
 optional arguments:
   -h, --help            show this help message and exit
-  --input-folder INPUT_FOLDER
-                        directory name containing input-target images for all categories/patients
-  --output-fname OUTPUT_FNAME
-                        output filename to save patched h5 file
-  --patch-size PATCH_SIZE
-                        p96 or p75 or p55 or p42 or p24 or p12. p96 yields 96x96 patched window
-  --normalization-type NORMALIZATION_TYPE
-                        unity_independent or unity_wrt_ld or std_independent or std_wrt_ld or None, for more info look at
-                        function img_pair_normalization in utils.py
-  --tensor-format TENSOR_FORMAT
-                        other option is tf. Depending upon the DL API tool, h5 input and target patches are saved
+  --input-folder        directory name containing input-target images for all categories/patients
+  --output-fname        output filename to save patched h5 file
+  --patch-size          p96 or p75 or p55 or p42 or p24 or p12. p96 yields 96x96 patched window
+  --normalization-type  unity_independent or unity_wrt_ld or std_independent or std_wrt_ld or None, for more info
+                        look at the function img_pair_normalization in utils.py
+  --tensor-format       other option is tf. Depending upon the DL API tool, h5 input and target patches are saved
                         accordingly. Eg torch tensor [batch_size, c, h, w]
-  --random_N            extracts random N complimentary images from input - target folders. For more info refer to in-built
-                        options
+  --random_N            extracts random N complimentary images from input - target folders. For more info refer to
+                        in-built options
   --rot_augment         employs rotation based augmentation
   --ds_augment          incorporates downscale based data augmentation
   --air_threshold       removes patches devoid of contrast
-  --blurr_n_noise       whether or not you want to add noise and blurr input data. This option is only implemented for
-                        serial implementation and not for mpi for now
+  --blurr_n_noise       whether or not you want to add noise and blurr input data. This option is only implemented
+                        for serial implementation and not for mpi for now
   --mpi_run             if you want to employ mpi based patch synthesis
 ```
 
