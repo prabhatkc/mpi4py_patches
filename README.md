@@ -1,11 +1,14 @@
-# mpi4py based feature extraction/patch generation for deep learning applications of CT-images
+## mpi4py based feature extraction/patch generation for deep learning applications of CT-images
 
-## Highlight
+### Highlight
 
 (1) Performs patch based feature extracting from raw training set in Parallel
+
 (2) Includes different options for data normalization
+
 (3) Includes translation and scaling based augmentation
-(4) Includes air thresholding to discard non-contrast regions 
+
+(4) Includes air thresholding to discard non-contrast regions
 
 ```
 usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [--patch-size PATCH_SIZE]
@@ -38,23 +41,23 @@ optional arguments:
   --mpi_run             if you want to employ mpi based patch synthesis
 ```
 
-## Example usage 
+### Example usage
 
-`$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold
-or 
-$ chmod +x gen_patches.sh
+`$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold<br>
+or<br>
+$ chmod +x gen_patches.sh<br>
 $ ./gen_patches
 `
 
-## Package requirements
+### Package requirements
 
-install mpicc compiler from https://www.open-mpi.org/faq/?category=building
+install mpicc compiler from https://www.open-mpi.org/faq/?category=building<br>
 use pip to install - mpi4py, numpy, h5py, matplotlib, pydicom, glob, random 
 
-## References
-Some demo images in the raw_data folder are imported from the Low Dose CT Grand Challenge
+### References
+Some demo images in the raw_data folder are imported from the Low Dose CT Grand Challenge<br>
 https://www.aapm.org/GrandChallenge/LowDoseCT/
 
-## Contact
+### Contact
 Prabhat KC
 prabhat.kc077@gmail.com
