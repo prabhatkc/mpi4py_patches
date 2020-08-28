@@ -7,6 +7,10 @@
 (3) Includes translation and scaling based augmentation<br>
 (4) Includes air thresholding to discard non-contrast regions
 
+### Results
+<img src="/sanity_check/raw_data/norm_None_patch_size_p55/hr_input_sub_img_rand_5737.png" alt="Input patchfig"/>
+<img src="/sanity_check/raw_data/norm_None_patch_size_p55/lr_input_sub_img_rand_5737.png" alt="Target patch fig"/>
+
 ```
 usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [--patch-size PATCH_SIZE]
                [--normalization-type NORMALIZATION_TYPE] [--tensor-format TENSOR_FORMAT] [--random_N] [--rot_augment]
@@ -42,7 +46,7 @@ optional arguments:
 
 `$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment --ds_augment --air_threshold`<br>
 or<br>
-$ chmod +x gen_patches.sh
+$ chmod +x gen_patches.sh<br>
 $ ./gen_patches
 
 ### Package requirements
