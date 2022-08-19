@@ -5,7 +5,7 @@
 (1) Performs patch based feature extracting from raw training set in Parallel<br>
 (2) Includes different options for data normalization<br>
 (3) Includes translation and scaling based augmentation<br>
-(4) air thresholding to discard non-contrast regions
+(4) thresholding to discard non-contrast regions
 
 ```
 usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [--patch-size PATCH_SIZE]
