@@ -56,8 +56,8 @@ $ ./gen_patches
 
 ### Results
 
-<img src="/sanity_check/raw_data/norm_None_patch_size_p55/hr_input_sub_img_rand_2346.png" title="Target patch fig">
-<img src="/sanity_check/raw_data/norm_None_patch_size_p55/lr_input_sub_img_rand_2346.png" title="Input patch fig">
+<img src="/sanity_check/raw_data/norm_None_patch_size_p55/hr_input_sub_img_rand_2346.png" title="Target patch fig" style="display: inline-block; margin: 0 auto; max-width: 300px">
+<img src="/sanity_check/raw_data/norm_None_patch_size_p55/lr_input_sub_img_rand_2346.png" title="Input patch fig" style="display: inline-block; margin: 0 auto; max-width: 300px">
 
 ### Package requirements
 
