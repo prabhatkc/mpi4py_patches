@@ -53,14 +53,15 @@ def makeh5patches(args):
 	if args.blurr_n_noise: seed = utils.bn_seed(len(all_input_paths), 0.4, 0.4)
 	else:				   sN = len(all_input_paths); seed = [None]*sN
 
+	if (args.dose_blend): blend_fact_arr = np.random.uniform(0.5,1.2,size=len(all_target_paths))
+
 	for i in range(len(all_input_paths)):
 		
 		input_image = gf.pydicom_imread(all_input_paths[i])
 		target_image = gf.pydicom_imread(all_target_paths[i])
 		#input_image = input_image[33:455]
 		#target_image = target_image[33:455]
-		#gf.plot2dlayers(input_image)
-		#sys.exit()
+		
 		if (input_image.shape != target_image. shape):
 			print("MISMATCH in image size for \
 				input: ", all_input_paths[i].split('/'), "& output: ", all_target_paths[i].split('/')[-1])
@@ -84,6 +85,7 @@ def makeh5patches(args):
 		# if len(sp) == 3:
 		# image = image[:, :, 0]
 
+		if (args.dose_blend): blend_factor= blend_fact_arr[i]
 		# ------------------
 		# Data normalization
 		# ------------------
@@ -137,12 +139,14 @@ def makeh5patches(args):
 				_, sub_label_un = utils.overlap_based_sub_images(args, cinput_, un_label_)
 				sub_input, sub_label = utils.air_thresholding(args, sub_input, sub_label, sub_label_un)
 
-			if args.rot_augment:
-				add_rot_input, add_rot_label= utils.rotation_based_augmentation(args, sub_input, sub_label)
-			else:
-				add_rot_input, add_rot_label = sub_input, sub_label
-			sub_input_of_all_inputs = np.append(sub_input_of_all_inputs, add_rot_input, axis=0)
-			sub_label_of_all_labels = np.append(sub_label_of_all_labels, add_rot_label, axis=0)		
+			augmented_input, augmented_label = sub_input, sub_label
+			if (args.rot_augment): augmented_input, augmented_label = utils.rotation_based_augmentation(args, augmented_input, augmented_label)
+			if (args.dose_blend):  augmented_input, augmented_label = utils.dose_blending_augmentation(args, augmented_input, augmented_label, blend_factor)
+			#else:
+			#	add_rot_input, add_rot_label = sub_input, sub_label
+			sub_input_of_all_inputs = np.append(sub_input_of_all_inputs, augmented_input, axis=0)
+			sub_label_of_all_labels = np.append(sub_label_of_all_labels, augmented_label, axis=0)	
+
 		#gf.multi2dplots(4, 8, sub_input_of_all_inputs[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*2, 4*2]})
 		#gf.multi2dplots(4, 8, sub_label_of_all_labels[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*2, 4*2]})
 		#sys.exit()
@@ -188,17 +192,44 @@ def makeh5patches(args):
 	# --------------------
 	# creating h5 file
 	#---------------------
+	print("\n==>patch work completed. Now exporting the data to h5 files")
+	print('   arr data type while incorperating various augmentation', sub_input_of_all_inputs.dtype, sub_label_of_all_labels.dtype)
+	print('   patched data are saved as data-type:', args.out_dtype, 'in h5 files')
+	
+
+	if args.out_dtype=='int16' or args.out_dtype=='int':
+		sdtype=np.int16
+	elif args.out_dtype=='float' or args.out_dtype=='float64':
+		sdtype=np.float64
+	elif args.out_dtype=='float32':
+		sdtype=np.float32
+	elif args.out_dtype=='uint16':
+		sdtype=np.uint16
+	else:
+		sdtype=np.float16
+		
 	output_folder = os.path.split(args.output_fname)[0]
 	if not os.path.isdir(output_folder): os.makedirs(output_folder)
-	hf = h5py.File(args.output_fname, mode='w')
-	hf.create_dataset('input', data=sub_input_of_all_inputs)
-	hf.create_dataset('target', data=sub_label_of_all_labels)
-	hf.close()
+	nsplit=int(args.nsplit)
+	if nsplit == 1:
+		hf = h5py.File(args.output_fname, mode='w')
+		hf.create_dataset('input', data=sub_input_of_all_inputs.astype(sdtype), dtype=sdtype)
+		hf.create_dataset('target', data=sub_label_of_all_labels.astype(sdtype), dtype=sdtype)
+		hf.close()
+	else:
+		split_dt=np.array_split(sub_input_of_all_inputs, nsplit, axis=0)
+		split_tgt=np.array_split(sub_label_of_all_labels, nsplit, axis=0)
+		for i in range(nsplit):
+			hf = h5py.File(args.output_fname[:-3] + '_' + str(i) + '.h5', mode='w')
+			hf.create_dataset('input', data=(split_dt[i]).astype(sdtype), dtype=sdtype)
+			hf.create_dataset('target', data=(split_tgt[i]).astype(sdtype), dtype=sdtype)
+			hf.close()
+
 	print("\nshape of the overall input  subimages: {}".format(sub_input_of_all_inputs.shape))
 	print("shape of the overall target subimages: {}".format(sub_label_of_all_labels.shape))
 	print("\nFinally, due to data normalization based on:", args.normalization_type)
 	print("input image range changes from (%.4f, %.4f) to (%.4f, %.4f)" % (min(pre_norm_in_min), max(pre_norm_in_max), min(post_norm_in_min), max(post_norm_in_max)))
 	print("target image range changes from (%.4f, %.4f) to (%.4f, %.4f)" % (min(pre_norm_tar_min), max(pre_norm_tar_max), min(post_norm_tar_min), max(post_norm_tar_max)))
-	print('final sum of input, target is:', np.sum(sub_input_of_all_inputs), np.sum(sub_label_of_all_labels))
+	#print('final sum of input, target is:', np.sum(sub_input_of_all_inputs.astype(args.out_dtype)), np.sum(sub_label_of_all_labels.astype(args.out_dtype)))
 	
 	

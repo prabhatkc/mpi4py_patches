@@ -9,6 +9,9 @@ import sys
 import glob_funcs as gf
 from random import randrange
 
+# cv2 intakes only float32 data types
+# neg values dues to dose augmentation is accounted
+# rotation or ds augmentation does not yield neg values
 def modcrop(image, scale=3):
   """ to ensure that transition between HR to LR 
   and vice-versa is divisible by the scaling 
@@ -45,13 +48,18 @@ def getimages4rmdir(foldername, randN=None):
 def downsample_4r_augmentation(initial_image):
     
     #aug_ds_facs = np.asarray([0.9, 0.8, 0.7, 0.6])
+    # cv2 only works for float type 32 
     aug_ds_facs = np.asarray([0.8, 0.6])
     aug_ds_input = []
     h, w = initial_image.shape
+    #print(initial_image.shape)
+    #print(h, w)
+    #sys.exit()
     aug_ds_input.append(initial_image)
     for i in range(len(aug_ds_facs)):
         scale = aug_ds_facs[i]
         aug_label = cv2.resize(initial_image, (int(w*scale), int(h*scale)), interpolation=cv2.INTER_AREA)
+        #sys.exit()
         aug_ds_input.append(aug_label)
     return(aug_ds_input)
 
@@ -134,7 +142,6 @@ def overlap_based_sub_images(config, input_, label_):
           H_xe =lh -1
           
       #print("Lr: xs, xe: ", L_xs, L_xe, "\t\thr: xs, xe: ", H_xs,  H_xe)
-  
       for y in range(0, iw, lr_stride):
       
           if(y==0):
@@ -183,28 +190,67 @@ def rotation_based_augmentation(args, sub_input, sub_label):
   #----------------------------------
   # in addition to the regular upright positioned
   # images, we also include the same image
-  # rotated by 90 deg and 180 in our training
+  # rotated by 90,180 , 270 degs or flippped 
+  # LR or UD in our training
   # instances
+  # sub_input is of shape [chunk_size, input_size, input_size, 1]
   rotated_all_inputs = np.empty([0, args.input_size, args.input_size, 1])
   rotated_all_labels =   np.empty([0, args.label_size, args.label_size, 1])
   
+  #print("inside rotation subroutine", sub_input.shape, sub_label.shape)
+  #sys.exit()
   for exp in range(3):
     if exp==0:
         add_rot_input = sub_input
         add_rot_label = sub_label
     elif exp==1:
+        # rotates given patch either by 90 deg or 180 deg or 270 deg
         k = randrange(3)+1
         add_rot_input = np.rot90(sub_input, k, (1,2))
         add_rot_label = np.rot90(sub_label, k, (1,2))
     elif exp==2:
+        # flips either the Patch either LR or UP
         k = randrange(2)
         add_rot_input = sub_input[:,::-1] if k==0 else sub_input[:,:,::-1]
         add_rot_label = sub_label[:,::-1] if k==0 else sub_label[:,:,::-1]      
-    
+
     rotated_all_inputs =  np.append(rotated_all_inputs, add_rot_input, axis=0)
     rotated_all_labels =  np.append(rotated_all_labels, add_rot_label, axis=0)
+
   return(rotated_all_inputs, rotated_all_labels)
 
+def dose_blending_augmentation(args, sub_input, sub_label, blend_factor):
+  # dose blending can cause certain patches to exhibit negative values
+  # Therefore minimum of these neg values should be added as (-min(patch))
+  # to the corresponding input and label patches
+  blended_all_inputs = np.empty([0, args.input_size, args.input_size, 1])
+  blended_all_labels = np.empty([0, args.label_size, args.label_size, 1])
+
+  for exp in range(2):
+    if exp==0:
+        add_blend_input = sub_input
+        add_blend_label = sub_label
+    elif exp==1:
+        add_blend_label = sub_label
+        add_blend_input = sub_label + blend_factor*(sub_input-sub_label)
+        # blending might include neg values for certain patches
+        # so adding the neg of those neg values for each of these patches in input as well as label
+        if (np.min(add_blend_input) < 0.0):
+          neg_ind = np.where(add_blend_input < 0.0)
+          neg_ind_unq_ax0 = np.unique(neg_ind[0])
+          # get negative values for each patch w.r.t axis 0
+          neg_vals_arr = add_blend_input[neg_ind_unq_ax0, :, :, :]
+          min_neg_vals = np.squeeze(np.min(np.min(neg_vals_arr, axis=1), axis=1))
+          for i in range(len(neg_ind_unq_ax0)):
+            add_blend_input[neg_ind_unq_ax0[i]] = add_blend_input[neg_ind_unq_ax0[i]] + (-min_neg_vals[i])
+            add_blend_label[neg_ind_unq_ax0[i]] = add_blend_label[neg_ind_unq_ax0[i]] + (-min_neg_vals[i])
+          #print("inside neg rotation subroutine", add_blend_input.shape, add_blend_label.shape, (np.min(add_blend_input)), np.min(add_blend_label))
+          #sys.exit()
+    
+    blended_all_inputs = np.append(blended_all_inputs, add_blend_input, axis=0)
+    blended_all_labels = np.append(blended_all_labels, add_blend_label, axis=0)
+  return(blended_all_inputs, blended_all_labels)
+    
 def img_pair_normalization(input_image, target_image, normalization_type=None):
   
   if normalization_type == 'unity_independent':

@@ -31,21 +31,28 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 	all_input_paths  = bcasted_input_data['all_input_paths']
 	all_target_paths = bcasted_input_data['all_target_paths']
 	nproc 			 = bcasted_input_data['nproc']
-	
+	blend_fact_arr   = bcasted_input_data['blend_fact_arr']
 	# partition trackers to transfer
 	pre_norm_tar_min, pre_norm_tar_max = [], []
 	post_norm_tar_min, post_norm_tar_max = [], []
 	
 	# declaring null array to store overall patches for a 
 	# given chunk of dataset and a given pid
-	each_rank_input_patch = np.empty([0, args.input_size, args.input_size, 1], dtype='float32')
-	each_rank_target_patch = np.empty([0, args.label_size, args.label_size, 1], dtype='float32')	
+	each_rank_input_patch = np.empty([0, args.input_size, args.input_size, 1], dtype=args.dtype)
+	each_rank_target_patch = np.empty([0, args.label_size, args.label_size, 1], dtype=args.dtype)	
 	
 	for j in range(chunck):
-		input_image = gf.pydicom_imread(all_input_paths[pid*chunck+j])
-		target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
-		#input_image = input_image[33:455]
-		#target_image = target_image[33:455]
+		if args.input_gen_folder == 'quarter_3mm_sharp_sorted':
+			input_image  = gf.pydicom_imread(all_input_paths[pid*chunck+j])
+			target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
+			input_image  = input_image[33:455]
+			target_image = target_image[33:455]
+		else:
+			# to account for the fact that realistic dose simulation output were sized [424, 512]
+			input_image  = gf.raw_imread(all_input_paths[pid*chunck+j], (424, 512), 'uint16')
+			target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
+			target_image = target_image[31:455] 
+
 		sp = target_image.shape
 
 		# --------------------------------
@@ -57,33 +64,39 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 			target_image = (target_image[:, :, 0])
 		
 		if(pid==0 and j==0): 
-			print('==>Here images from training dataset is of type-', target_image.dtype,end='.')
-			print(' And is assigned as-', (target_image.astype('float32')).dtype,'before network training.')
+			print('==>Here images from training dataset is of type-', target_image.dtype, end='.')
+			print(' And is assigned as-', (target_image.astype(args.dtype)).dtype,'for the network training.')
+			print('==>Here input images are sampled from', args.input_gen_folder, 'and are sized', input_image.shape, end='.')
 	
-		target_image = target_image.astype('float32')
-		input_image  = input_image.astype('float32')
+		target_image = target_image.astype(args.dtype)
+		input_image  = input_image.astype(args.dtype)
 		# dummy place holder to for air thresholding
 		if(args.air_threshold): target_image_un = target_image
+		# get blending factor 
+		# in case of no dodse augmentation blending factor is simply 0
+		blend_factor=blend_fact_arr[pid*chunck+j]
+			#print(pid, chunck, blend_factor)
 		if (pid==0 and j==0): 
 			print("\n==>First target image in the raw stack (i.e. before patching) is of shape", target_image.shape)
 			print("   Input image is LD correspondance of its target image.")
 			print('   For now SR model implements Normalization/Standardization independently to each pair or W.R.T target_image.')
 		
-		# ----------------------------------
+		# -----------------------------------------------------
 		# Data normalization & augmentation & air-thresholding
-		# -----------------------------------
+		# -----------------------------------------------------w
 		pre_norm_tar_min.append(np.min(target_image)); pre_norm_tar_max.append(np.max(target_image))
 		input_image, target_image = utils.img_pair_normalization(input_image, target_image, args.normalization_type)		
 		post_norm_tar_min.append(np.min(target_image)); post_norm_tar_max.append(np.max(target_image))
-		if(args.air_threshold): t_input_patch, t_target_patch = augment_n_return_patch(args, input_image, target_image, j, pid, target_image_un)
-		else:					t_input_patch, t_target_patch = augment_n_return_patch(args, input_image, target_image, j, pid)
+		#sys.exit()
+		if(args.air_threshold): t_input_patch, t_target_patch = augment_n_return_patch(args, input_image, target_image, j, pid, blend_factor, target_image_un)
+		else:					t_input_patch, t_target_patch = augment_n_return_patch(args, input_image, target_image, j, pid, blend_factor)
 		each_rank_input_patch  = np.append(each_rank_input_patch, t_input_patch, axis=0)
 		each_rank_target_patch = np.append(each_rank_target_patch, t_target_patch, axis=0)
 
 	#converting the stacked 3d image patch in to a 1d buffer
 	#print('inside inner function: ranks is:', pid, 'its input patch size is', each_rank_input_patch.shape, '& target patch size is', each_rank_target_patch.shape )
-	each_rank_input_patch_inbuff  = arrtobuff(each_rank_input_patch.astype('float32'))
-	each_rank_target_patch_inbuff = arrtobuff(each_rank_target_patch.astype('float32'))
+	each_rank_input_patch_inbuff  = arrtobuff(each_rank_input_patch.astype(args.dtype))
+	each_rank_target_patch_inbuff = arrtobuff(each_rank_target_patch.astype(args.dtype))
 
 	#returning buffers
 	partitioned_data ={'chunck_pre_norm_min':np.full(1, min(pre_norm_tar_min)),\
@@ -94,9 +107,10 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 					   'chunck_target_patch_inbuff':each_rank_target_patch_inbuff}	
 	return(partitioned_data)
 	
-def augment_n_return_patch(args, input_image, target_image, i, pid, target_image_un=None):
+def augment_n_return_patch(args, input_image, target_image, i, pid, blend_factor, target_image_un=None):
 	
 	if args.ds_augment:
+		#sys.exit()
 		input_aug_images = utils.downsample_4r_augmentation(input_image)
 		target_aug_images = utils.downsample_4r_augmentation(target_image)
 		if (args.air_threshold): target_un_aug_images = utils.downsample_4r_augmentation(target_image_un)
@@ -112,8 +126,8 @@ def augment_n_return_patch(args, input_image, target_image, i, pid, target_image
 		if(i==0 and pid==0): print("\n==>Downscale based data augmentation is NoT PERFORMED")
 
 	# declaring null array to append patches from augmented input & label later
-	each_img_input_patch = np.empty([0, args.input_size, args.input_size, 1], dtype='float32')
-	each_img_target_patch = np.empty([0, args.label_size, args.label_size, 1], dtype='float32')
+	each_img_input_patch = np.empty([0, args.input_size, args.input_size, 1], dtype=args.dtype)
+	each_img_target_patch = np.empty([0, args.label_size, args.label_size, 1], dtype=args.dtype)
 	
 	# Now working on each augmented images
 	for p in range(len(input_aug_images)):
@@ -144,15 +158,24 @@ def augment_n_return_patch(args, input_image, target_image, i, pid, target_image
 		'''
 		cinput_ = input_
 		sub_input, sub_label = utils.overlap_based_sub_images(args, cinput_, label_)
+		
 		if(args.air_threshold):
 			_, sub_label_un = utils.overlap_based_sub_images(args, cinput_, un_label_) #cinput_ doesnot matter here
 			sub_input, sub_label = utils.air_thresholding(args, sub_input, sub_label, sub_label_un)
-		if args.rot_augment:
-			add_rot_input, add_rot_label= utils.rotation_based_augmentation(args, sub_input, sub_label)
-		else:
-			add_rot_input, add_rot_label = sub_input, sub_label
-		each_img_input_patch = np.append(each_img_input_patch, add_rot_input, axis=0)
-		each_img_target_patch = np.append(each_img_target_patch, add_rot_label, axis=0)
+		
+		augmented_input, augmented_label = sub_input, sub_label
+
+		if(args.rot_augment): augmented_input, augmented_label = utils.rotation_based_augmentation(args, augmented_input, augmented_label)
+		if(args.dose_blend): augmented_input, augmented_label = utils.dose_blending_augmentation(args, augmented_input, augmented_label, blend_factor)
+		each_img_input_patch = np.append(each_img_input_patch, augmented_input, axis=0)
+		each_img_target_patch = np.append(each_img_target_patch, augmented_label, axis=0)
+
+		#if args.rot_augment:
+		#	add_rot_input, add_rot_label= utils.rotation_based_augmentation(args, sub_input, sub_label)
+		#else:
+		#	add_rot_input, add_rot_label = sub_input, sub_label
+		#each_img_input_patch = np.append(each_img_input_patch, add_rot_input, axis=0)
+		#each_img_target_patch = np.append(each_img_target_patch, add_rot_label, axis=0)
 	
 	'''
 	if(i==0 and pid ==0):

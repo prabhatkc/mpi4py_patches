@@ -19,17 +19,17 @@ def makeh5patches_in_mpi(args):
 	size = comm.Get_size()
 	dest = 0
 	root = 0
-
+	dtype = args.dtype
 	# -------------------------------------
 	# Variables to be used for 
 	# 	 Reduce Operations
 	# -----------------------------------
-	partition_img_sum = np.zeros(1, dtype='d')
+	partition_img_sum = np.zeros(1, dtype=dtype)
 	# float declarations
-	global_pre_norm_tar_min  = np.zeros(1, dtype='float32')
-	global_pre_norm_tar_max  = np.zeros(1, dtype='float32')
-	global_post_norm_tar_min = np.zeros(1, dtype='float32')
-	global_post_norm_tar_max = np.zeros(1, dtype='float32')
+	global_pre_norm_tar_min  = np.zeros(1, dtype=dtype)
+	global_pre_norm_tar_max  = np.zeros(1, dtype=dtype)
+	global_post_norm_tar_min = np.zeros(1, dtype=dtype)
+	global_post_norm_tar_max = np.zeros(1, dtype=dtype)
 	# dict diclarations
 	partitioned_data = None
 
@@ -59,7 +59,18 @@ def makeh5patches_in_mpi(args):
 			all_target_paths = all_target_paths[:-N_last_paths]
 			all_input_paths  = all_input_paths [:-N_last_paths]
 
+		if (args.dose_blend):
+			blend_fact_arr = np.random.uniform(0.5,1.2,size=len(all_target_paths))
+		else: 
+			#dummmy place holder
+			blend_fact_arr=np.zeros((len(all_target_paths),1), dtype=dtype)
+
+		#print(blend_fact_arr)
+		#sys.exit()
 		chunck = int(len(all_target_paths)/nproc) 
+		if (len(all_target_paths)!=len(all_input_paths)):
+			print('ERROR! Mismatch in no of input vs no of target images.')
+			sys.exit()
 		print('  ',len(all_target_paths),'LR-HR image pairs are processed by', nproc, \
 			'processors; with each rank processing', chunck, 'img-pairs')
 		'''
@@ -67,10 +78,11 @@ def makeh5patches_in_mpi(args):
 		print(all_input_paths)
 		print('\n\nTraining target image paths:')
 		print(all_target_paths)
+		print('blend factors before broadcast', blend_fact_arr)
 		'''
 		# input-output variables from each rank
 		bcasted_input_data = {'all_target_paths': all_target_paths, 'all_input_paths': all_input_paths,\
-							  'chunck': chunck, 'nproc':nproc}
+							  'chunck': chunck, 'nproc':nproc, 'blend_fact_arr': blend_fact_arr}
 	else:
 		bcasted_input_data  = None
 
@@ -91,8 +103,8 @@ def makeh5patches_in_mpi(args):
 
 	# Allocate arrays to collect all the processed patches from all the ranks
 	if (rank == dest): 
-		all_input_patch_buff = np.zeros(sum(arr_of_InputCounts_in_ranks), dtype='float32')
-		all_target_patch_buff = np.zeros(sum(arr_of_TargetCounts_in_ranks), dtype='float32')
+		all_input_patch_buff = np.zeros(sum(arr_of_InputCounts_in_ranks), dtype=dtype)
+		all_target_patch_buff = np.zeros(sum(arr_of_TargetCounts_in_ranks), dtype=dtype)
 	else: 
 		all_input_patch_buff = None; all_target_patch_buff=None
 
@@ -162,19 +174,43 @@ def makeh5patches_in_mpi(args):
 			sub_label_of_all_labels = sub_label_of_all_labels
 		print("\n==>Shape of the overall input  subimages: {}".format(sub_input_of_all_inputs.shape))
 		print("   Shape of the overall target subimages: {}".format(sub_label_of_all_labels.shape))
-		print("   Range of Target Image stack changes from (%.4f, %.4f) to (%.4f, %.4f)\n   due to " %\
+		print("   Range of Target Image stack changes from (%.4f, %.4f) to (%.4f, %.4f)\n   due to normalization_type: " %\
 		(global_pre_norm_tar_min, global_pre_norm_tar_max,\
 		global_post_norm_tar_min, global_post_norm_tar_max), args.normalization_type)
-		#print('final sum of input, target is:', np.sum(sub_input_of_all_inputs), np.sum(sub_label_of_all_labels))
 
 		# --------------------
 		# creating h5 file
 		#---------------------
+		if args.out_dtype=='int16' or args.out_dtype=='int':
+			sdtype=np.int16
+		elif args.out_dtype=='float' or args.out_dtype=='float64':
+			sdtype=np.float64
+		elif args.out_dtype=='float32':
+			sdtype=np.float32
+		elif args.out_dtype=='uint16':
+			sdtype=np.uint16
+		else:
+			sdtype=np.float16
+		print("\n==>patch work completed. Now exporting the data to h5 files")
+		print('   arr data type while incorperating various augmentation', sub_input_of_all_inputs.dtype, sub_label_of_all_labels.dtype)
+		print('   and the patched data is saved as data-type:', sdtype)
 		output_folder = os.path.split(args.output_fname)[0]
 		if not os.path.isdir(output_folder): os.makedirs(output_folder)
-		hf = h5py.File(args.output_fname, mode='w')
-		hf.create_dataset('input', data=sub_input_of_all_inputs)
-		hf.create_dataset('target', data=sub_label_of_all_labels)
-		hf.close()
+		nsplit=int(args.nsplit)
+		if nsplit == 1:
+			hf = h5py.File(args.output_fname, mode='w')
+			hf.create_dataset('input', data=sub_input_of_all_inputs.astype(sdtype), dtype=sdtype)
+			hf.create_dataset('target', data=sub_label_of_all_labels.astype(sdtype), dtype=sdtype)
+			hf.close()
+		else:
+			split_dt=np.array_split(sub_input_of_all_inputs, nsplit, axis=0)
+			split_tgt=np.array_split(sub_label_of_all_labels, nsplit, axis=0)
+			for i in range(nsplit):
+				hf = h5py.File(args.output_fname[:-3] + '_' + str(i) + '.h5', mode='w')
+				hf.create_dataset('input', data=(split_dt[i]).astype(sdtype), dtype=sdtype)
+				hf.create_dataset('target', data=(split_tgt[i]).astype(sdtype), dtype=sdtype)
+				hf.close()
+
+		#print('final sum of input, target is:', np.sum(sub_input_of_all_inputs.astype(np.float32)), np.sum(sub_label_of_all_labels.astype(np.float32)))
 
 	comm.Barrier()

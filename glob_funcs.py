@@ -86,3 +86,8 @@ def multi2dplots(nrows, ncols, fig_arr, axis, passed_fig_att=None):
         plt.show()
     else:
         plt.savefig(fig_att["out_path"])
+
+def raw_imread(path, shape=(256, 256), dtype='int16'):
+  input_image = np.fromfile(path, dtype=dtype).astype('float32')
+  input_image = input_image.reshape(shape)
+  return(input_image)
