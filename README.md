@@ -49,11 +49,15 @@ optional arguments:
 
 ## Example usage
 
-`$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment -out-dtype 'float16' --ds_augment --air_threshold --dose-blend --nsplit 2`<br>
+```
+$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' \
+--patch-size 'p55' --mpi_run --rot_augment -out-dtype 'float16' --ds_augment --air_threshold --dose-blend --nsplit 2
+```
 > > Instead you may choose to (modify &) execute patch generating bash file as:
-
-`$ chmod +x gen_patches.sh<br>
-$ ./gen_patches.sh`
+```
+$ chmod +x gen_patches.sh
+$ ./gen_patches.sh
+```
 
 ## Results
 <br>
@@ -64,7 +68,8 @@ $ ./gen_patches.sh`
 </div>
 
 ## Package requirements
-- Install mpicc compiler as conda install -c anaconda mpi4py.<br>
+- Install mpicc compiler as:
+  - `$ conda install -c anaconda mpi4py`<br>
 - Use pip to install numpy, h5py, matplotlib, pydicom, glob, random, opencv-python.
 
 ## References
