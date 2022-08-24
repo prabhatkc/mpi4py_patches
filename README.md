@@ -1,6 +1,6 @@
 ## mpi4py based feature extraction/patch generation for Deep Learning from CT images
 
-### Highlight
+## Highlights
 
 (1) Performs patch based feature extracting from raw training set in Parallel<br>
 (2) Includes different options for data normalization<br>
@@ -47,14 +47,15 @@ optional arguments:
 
 ``` 
 
-### Example usage
+## Example usage
 
 `$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' --patch-size 'p55' --mpi_run --rot_augment -out-dtype 'float16' --ds_augment --air_threshold --dose-blend --nsplit 2`<br>
-or<br>
-$ chmod +x gen_patches.sh<br>
-$ ./gen_patches
+> > Instead you may choose to (modify &) execute patch generating bash file as:
 
-### Results
+`$ chmod +x gen_patches.sh<br>
+$ ./gen_patches.sh`
+
+## Results
 <br>
 <div figcaption align = "left"><b>Input patches</b></figcaption><br>
 <img alt="img-name" src="/sanity_check/raw_data/norm_None_patch_size_p55/lr_input_sub_img_rand_2346.png"><br>
@@ -62,20 +63,19 @@ $ ./gen_patches
 <img alt="img-name" src="/sanity_check/raw_data/norm_None_patch_size_p55/hr_input_sub_img_rand_2346.png"><br>
 </div>
 
-### Package requirements
-install mpicc compiler as conda install -c anaconda mpi4py<br>
-use pip to install numpy, h5py, matplotlib, pydicom, glob, random, opencv-python
+## Package requirements
+- Install mpicc compiler as conda install -c anaconda mpi4py.<br>
+- Use pip to install numpy, h5py, matplotlib, pydicom, glob, random, opencv-python.
 
-### References
-- Some demo images in the raw_data folder are imported from the Low Dose CT Grand Challenge<br>
-https://www.aapm.org/GrandChallenge/LowDoseCT/
+## References
+- Some demo images in the raw_data folder are imported from the [Low Dose CT Grand Challenge](https://www.aapm.org/GrandChallenge/LowDoseCT/)<br>
 - L. Dalcin, P. Kler, R. Paz, and A. Cosimo, Parallel Distributed Computing using Python, Advances in Water Resources, 34(9) 1124-1139, 2011. http://dx.doi.org/10.1016/j.advwatres.2011.04.013
 - L. Dalcin, R. Paz, M. Storti, and J. D’Elia, MPI for Python: performance improvements and MPI-2 extensions, Journal of Parallel and Distributed Computing, 68(5):655-662, 2008. http://dx.doi.org/10.1016/j.jpdc.2007.09.005
 - L. Dalcin, R. Paz, and M. Storti, MPI for Python, Journal of Parallel and Distributed Computing, 65(9):1108-1115, 2005. http://dx.doi.org/10.1016/j.jpdc.2005.03.010
 
-### License and Copyright
+## License and Copyright
 This software and documentation (the "Software") were developed at the Food and Drug Administration (FDA) by employees of the Federal Government in the course of their official duties. Pursuant to Title 17, Section 105 of the United States Code, this work is not subject to copyright protection and is in the public domain. Permission is hereby granted, free of charge, to any person obtaining a copy of the Software, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, or sell copies of the Software or derivatives, and to permit persons to whom the Software is furnished to do so. FDA assumes no responsibility whatsoever for use by other parties of the Software, its source code, documentation or compiled executables, and makes no guarantees, expressed or implied, about its quality, reliability, or any other characteristic. Further, use of this code in no way implies endorsement by the FDA or confers any advantage in regulatory decisions. Although this software can be redistributed and/or modified freely, we ask that any derivative works bear some notice that they are derived from it, and any modified versions bear some notice that they have been modified.
 
-### Contact
+## Contact
 Prabhat KC
 prabhat.kc077@gmail.com
