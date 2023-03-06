@@ -6,7 +6,7 @@ usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [-
                [--normalization-type NORMALIZATION_TYPE] [--tensor-format TENSOR_FORMAT] [--random_N] [--rot_augment]
                [--ds_augment] [--air_threshold] [--blurr_n_noise] [--mpi_run] [--dose_blend] [--sanity_plot_check] 
                [--nsplit NSPLIT] [--out-dtype OUT_DTYPE] [--input_gen_folder INPUT_GEN_FOLDER]
-               [--target_gen_folder TARGET_GEN_FOLDER]
+               [--target_gen_folder TARGET_GEN_FOLDER] [--img-format IMG_FORMAT]
 
 Storing input-target images as patches in h5 format from all patient data /
 category sets
@@ -33,6 +33,9 @@ optional arguments:
   --sanity_plot_check   if you want to view some of the patched plots
   --nsplit              no. of h5 files containing n chunks of patches
   --out-dtype           array type of output h5 file. Options include float32
+  --input-gen-folder    folder name containing noisy (input) measurements
+  --target-gen-folder   folder name containing clean (target) measurements
+  --img-format          image format for input and target images.
 
 #------------------------------------------------------------------------------------------------------------------#
 #                   WARNINGS
@@ -56,4 +59,5 @@ COMMENT
 # here mpiexec -n 4 means that the code is going to use 4 processors  
 OUTPUT_FNAME='./mpi_patches/val_patches.h5'
 mpiexec -n 4 python main.py --input-folder 'raw_data' --output-fname $OUTPUT_FNAME --patch-size 'p55' --out-dtype 'float16' \
---air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2
+--air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
+--input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted'
