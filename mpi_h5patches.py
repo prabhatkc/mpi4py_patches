@@ -45,7 +45,8 @@ def makeh5patches_in_mpi(args):
 		print('----------------------------------------')
 		for i in args.__dict__: print((i),':',args.__dict__[i])
 		print('----------------------------------------')
-		
+		if args.img_format != 'dicom':
+			print('WARNING. Ensure the img format for input-target pair and their sizes are acccurate in \n "partition_read_normalize_n_augment" in file mpi_utils.py.')
 		# read all images in the training dataset
 		all_input_paths, all_target_paths = mpi_utils.img_paths4rm_training_directory(args)
 

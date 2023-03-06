@@ -42,7 +42,7 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 	each_rank_target_patch = np.empty([0, args.label_size, args.label_size, 1], dtype=args.dtype)	
 	
 	for j in range(chunck):
-		if args.input_gen_folder == 'quarter_3mm_sharp_sorted':
+		if args.img_format == 'dicom':
 			input_image  = gf.pydicom_imread(all_input_paths[pid*chunck+j])
 			target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
 			input_image  = input_image[33:455]

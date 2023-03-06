@@ -15,7 +15,8 @@ def makeh5patches(args):
 	print('----------------------------------------')
 	for i in args.__dict__: print((i),':',args.__dict__[i])
 	print('----------------------------------------')
-
+	if args.img_format != 'dicom':
+			print('WARNING. Ensure the img format for input-target pair and their sizes are acccurate in \n line 61 in file serial_h5patches.py.')
 	# reading all the image paths for given patients
 	all_dir_paths = sorted(glob.glob(args.input_folder+'/*/'))#/*/-> to enter sub-folders
 	all_input_paths, all_target_paths = [], []

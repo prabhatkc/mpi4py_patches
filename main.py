@@ -25,8 +25,9 @@ parser.add_argument('--sanity_plot_check', 	 action='store_true', help='if you w
 parser.add_argument('--nsplit', type=int, default=1, help='no. of h5 files containing n chunks of patches')
 parser.add_argument('--out-dtype', type=str, default='float16', help="array type of output h5 file. Options include \
 				 	float32, float64, int16, uint16.")
-parser.add_argument('--input_gen_folder', type=str, default='quarter_3mm_sharp_sorted', help="folder name containing noisy (input) measurements")
-parser.add_argument('--target_gen_folder', type=str, default='full_3mm_sharp_sorted', help="folder name containing clean (target) measurements")
+parser.add_argument('--input-gen-folder', type=str, default='quarter_3mm_sharp_sorted', help="folder name containing noisy (input) measurements")
+parser.add_argument('--target-gen-folder', type=str, default='full_3mm_sharp_sorted', help="folder name containing clean (target) measurements")
+parser.add_argument('--img-format', type=str, default='dicom', help='image format for input and target images. Dicom/raw/tif?')
 # shuffling in parallel is yet to be implemented. However, shuffling the patches can easily be implemented at the time of deep learning.
 # Simply use the default parameter shuffle=True while loading h5 patches in torch (torch.data.utils.Dataloader) or in tensorflow 
 # or in any other API for that matter
@@ -48,7 +49,7 @@ if __name__ == '__main__':
 									   'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
 	args.input_size, args.label_size= patch_option[args.patch_size]
 	args.lr_stride                  = int(args.input_size - args.lr_padding)
-	args.target_gen_folder          = "full_3mm_sharp_sorted" #target/high dose folder name
+	# args.target_gen_folder          = "full_3mm_sharp_sorted" #target/high dose folder name
 	args.channel                    = 1
 	args.shuffle_patches            = False
 	
