@@ -12,8 +12,8 @@
 usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [--patch-size PATCH_SIZE]
                [--normalization-type NORMALIZATION_TYPE] [--tensor-format TENSOR_FORMAT] [--random_N] [--rot_augment]
                [--ds_augment] [--air_threshold] [--blurr_n_noise] [--mpi_run] [--dose_blend] [--sanity_plot_check] 
-               [--nsplit NSPLIT] [--out-dtype OUT_DTYPE] [--input_gen_folder INPUT_GEN_FOLDER]
-               [--target_gen_folder TARGET_GEN_FOLDER]
+               [--nsplit NSPLIT] [--out-dtype OUT_DTYPE] [--input-gen-folder INPUT_GEN_FOLDER]
+               [--target-gen-folder TARGET_GEN_FOLDER] [--img-format IMG_FORMAT]
 
 Storing input-target images as patches in h5 format from all patient data /
 category sets
@@ -41,9 +41,9 @@ optional arguments:
   --nsplit              no. of h5 files containing n chunks of patches
   --out-dtype           array type of output h5 file. Options include float32,
                         float64, int16, uint16.
-  --input_gen_folder    folder name containing noisy (input) measurements
-  --target_gen_folder   folder name containing clean (target) measurements
-
+  --input-gen-folder    folder name containing noisy (input) measurements
+  --target-gen-folder   folder name containing clean (target) measurements
+  --img-format          image format for input and target images.
 
 ``` 
 
@@ -51,12 +51,13 @@ optional arguments:
 
 ```
 $ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' \
---patch-size 'p55' --mpi_run --rot_augment -out-dtype 'float16' --ds_augment --air_threshold --dose-blend --nsplit 2
+--patch-size 'p55' --mpi_run --rot_augment --out-dtype 'float16' --ds_augment --air_threshold --dose_blend --nsplit 2 \
+--input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted' --sanity_plot_check
 ```
 > > Instead you may choose to (modify &) execute patch generating bash file as:
 ```
-$ chmod +x gen_patches.sh
-$ ./gen_patches.sh
+$ chmod +x demo_run.sh
+$ ./demo_run.sh
 ```
 
 ## Results
