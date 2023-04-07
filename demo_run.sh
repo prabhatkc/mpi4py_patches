@@ -36,11 +36,11 @@ optional arguments:
   --input-gen-folder    folder name containing noisy (input) measurements
   --target-gen-folder   folder name containing clean (target) measurements
   --img-format          image format for input and target images.
-
+  --shuffle-patches     options include np_shuffle or none
 #------------------------------------------------------------------------------------------------------------------#
 #                   WARNINGS
 #------------------------------------------------------------------------------------------------------------------#
-(1) If your training data size is too big i.e. in the order of10s or 100s of GB, 
+(1) If your training data size is too big i.e. in the order of 10s or 100s of GB, 
     you may incur segmentation faults as the data array size might become larger than what your machine/processor 
     can process at a given time. So it is advised that you split your training raw data as Train_data1, Train_data2, 
     Train_data3 or so on such that each Train_data3 is less than 5 GB or your machine's each processor's threshold/memory 
@@ -57,7 +57,45 @@ COMMENT
 
 # mpi run
 # here mpiexec -n 4 means that the code is going to use 4 processors  
-OUTPUT_FNAME='./mpi_patches/val_patches.h5'
+
+# ----------------------------------------------------------
+# direct patching without any shuffling
+# ----------------------------------------------------------
+OUTPUT_FNAME='./mpi_patches/p55_val_patches.h5'
 mpiexec -n 4 python main.py --input-folder 'raw_data' --output-fname $OUTPUT_FNAME --patch-size 'p55' --out-dtype 'float16' \
 --air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
+--input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted' --shuffle-patches 'torch_shuffle'
+
+OUTPUT_FNAME='./mpi_patches/p96_val_patches.h5'
+mpiexec -n 4 python main.py --input-folder 'raw_data' --output-fname $OUTPUT_FNAME --patch-size 'p96' --out-dtype 'float16' \
+--air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
 --input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted'
+
+# ----------------------------------------------------------
+# for mixed training 
+# ----------------------------------------------------------
+# following executes shuffling scans at patient level
+# ----------------------------------------------------------
+# remove dummy place holder files from previous executions (if any)
+rm -r raw_data_mixed_cp
+rm -r pre_randomize
+rm -r placeholder
+python pre_patch_scan_shuffle.py --input-folder 'raw_data_mixed' --output-folder 'pre_randomize' --nsplit 2
+
+# ----------------------------------------------------------
+# following executes shuffling scans at patient level
+# ----------------------------------------------------------
+OUTPUT_FNAME='./mpi_patches/part_0_shuffled.h5'
+mpiexec -n 1 python main.py --input-folder 'pre_randomize/part_0' --output-fname $OUTPUT_FNAME --patch-size 'p55' --out-dtype 'float16' \
+--air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
+--input-gen-folder 'quarter_3mm' --target-gen-folder 'full_3mm' --shuffle-patches 'np_shuffle'
+
+# time check 
+# export CUDA_DEVICE_ORDER=PCI_BUS_ID
+# export CUDA_VISIBLE_DEVICES=6
+# OUTPUT_FNAME='./mpi_patches/torch_shuffled/trainA.h5'
+# INPUT_FOLDER='/gpfs_projects/prabhat.kc/lowdosect/data/clin_LDCT_post_40train_partA'
+# time mpiexec -n 4 python main.py --input-folder $INPUT_FOLDER --output-fname $OUTPUT_FNAME \
+# --patch-size 'p55' --rot_augment --ds_augment --air_threshold --mpi_run --sanity_plot_check --dose_blend --nsplit 9 \
+# --input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted' --shuffle-patches 'np_shuffle'
+# for trainB -> np takes 8m48.754s for train a it takes 
