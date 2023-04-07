@@ -44,6 +44,7 @@ optional arguments:
   --input-gen-folder    folder name containing noisy (input) measurements
   --target-gen-folder   folder name containing clean (target) measurements
   --img-format          image format for input and target images.
+  --shuffle-patches     options include np_shuffle or none
 
 ``` 
 
@@ -63,9 +64,9 @@ $ ./demo_run.sh
 ## Results
 <br>
 <div figcaption align = "left"><b>Input patches</b></figcaption><br>
-<img alt="img-name" src="/sanity_check/raw_data/norm_None_patch_size_p55/lr_input_sub_img_rand_2346.png"><br>
+<img alt="img-name" src="/sanity_check/part_0/norm_None_patch_size_p55/lr_input_sub_img_rand_5748.png"><br>
 <figcaption align = "left"><b>Target patches</b></figcaption><br>
-<img alt="img-name" src="/sanity_check/raw_data/norm_None_patch_size_p55/hr_input_sub_img_rand_2346.png"><br>
+<img alt="img-name" src="/sanity_check/part_0/norm_None_patch_size_p55/hr_input_sub_img_rand_5748.png"><br>
 </div>
 
 ## Package requirements
