@@ -28,10 +28,7 @@ parser.add_argument('--out-dtype', type=str, default='float16', help="array type
 parser.add_argument('--input-gen-folder', type=str, default='quarter_3mm_sharp_sorted', help="folder name containing noisy (input) measurements")
 parser.add_argument('--target-gen-folder', type=str, default='full_3mm_sharp_sorted', help="folder name containing clean (target) measurements")
 parser.add_argument('--img-format', type=str, default='dicom', help='image format for input and target images. Dicom/raw/tif?')
-# shuffling in parallel is yet to be implemented. However, shuffling the patches can easily be implemented at the time of deep learning.
-# Simply use the default parameter shuffle=True while loading h5 patches in torch (torch.data.utils.Dataloader) or in tensorflow 
-# or in any other API for that matter
-# parser.add_argument('--shuffle_patches', action='store_true', help='shuffle extracted complimentary input-target patches jointly')
+parser.add_argument('--shuffle-patches', type=str, default=None, help='options include np_shuffle or none')
 
 if __name__ == '__main__':
 
@@ -49,22 +46,21 @@ if __name__ == '__main__':
 									   'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
 	args.input_size, args.label_size= patch_option[args.patch_size]
 	args.lr_stride                  = int(args.input_size - args.lr_padding)
-	# args.target_gen_folder          = "full_3mm_sharp_sorted" #target/high dose folder name
 	args.channel                    = 1
-	args.shuffle_patches            = False
 	
 	# the array type below is the precision type that MPI performs its operations after the read of data
 	# and up until saving the h5 patches. There is not much flexibity in changing the data type for 
 	# the MPI operations. Have a look at https://pages.tacc.utexas.edu/~eijkhout/pcse/html/mpi-data.html#Python
 	args.dtype                      = 'float32' 
 
-	# number of random images from each sub-folders used to formulate the h5 training set instead of all the images from
+	# number of random images from each sub-folders 
+	# used to formulate the h5 training set instead of all the images from
 	# all input-target subfolders
 	if args.random_N: args.N_rand_imgs = 7 
 	if (args.nsplit <=0):
 		print('nsplit or no. of h5 files must be a positive integer')
 		sys.exit()
 	if(args.mpi_run==True): from mpi_h5patches import makeh5patches_in_mpi; makeh5patches_in_mpi(args)
-	else: 					from serial_h5patches import makeh5patches; makeh5patches(args)
+	else:                   from serial_h5patches import makeh5patches; makeh5patches(args)
 	
 	

@@ -127,7 +127,7 @@ def makeh5patches_in_mpi(args):
 		
 		sub_input_of_all_inputs = mpi_utils.bufftoarr(all_input_patch_buff, sum(arr_of_InputCounts_in_ranks), iph, ipw, args.channel)
 		sub_label_of_all_labels = mpi_utils.bufftoarr(all_target_patch_buff, sum(arr_of_TargetCounts_in_ranks), args.label_size, args.label_size, args.channel)
-		
+		print('final sum of input, target (pre-shuffling):', np.sum(sub_input_of_all_inputs.astype(np.float32)), np.sum(sub_label_of_all_labels.astype(np.float32)))
 		# --------------------------
 		# Shuffling the patches     
 		# --------------------------
@@ -135,14 +135,20 @@ def makeh5patches_in_mpi(args):
 		at the time of run using pytorch or tf based data sampler. 
 		Also, current shuffling code is more of a bottle neck and needs to be implemented
 		in parallel with array based shuffling rather than using index shuffle. 
-		if args.shuffle_patches:
+		"""
+		if args.shuffle_patches == 'np_shuffle':
 			Npatches = len(sub_input_of_all_inputs)
 			shuffled_Npatches_arr = np.arange(Npatches)
 			np.random.shuffle(shuffled_Npatches_arr)
 			sub_input_of_all_inputs = sub_input_of_all_inputs[shuffled_Npatches_arr, :, :, :]
 			sub_label_of_all_labels = sub_label_of_all_labels[shuffled_Npatches_arr, :, :, :]
-		"""
+		# torch shuffle takes longer than np shuffle hence commenting this option for now
+		# elif args.shuffle_patches == 'torch_shuffle':
+		# 	sub_input_of_all_inputs, sub_label_of_all_labels = mpi_utils.torch_shuffle(sub_input_of_all_inputs, sub_label_of_all_labels)
+		else:
+			print("\n==>Patch shuffling is not performed!")
 
+		print('final sum of input, target (post-shuffling):', np.sum(sub_input_of_all_inputs.astype(np.float32)), np.sum(sub_label_of_all_labels.astype(np.float32)))
 		# -----------------------------------------------------
 		# Sanity check
 		# making patch plot of random patches for sanity check
