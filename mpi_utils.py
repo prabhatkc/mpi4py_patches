@@ -6,7 +6,7 @@ import glob
 import utils
 
 import glob_funcs as gf
-import torch
+# import torch
 
 def img_paths4rm_training_directory(args):
   # return paths of target images from input_folder with 
@@ -195,7 +195,7 @@ def bufftoarr(buff, tot_element_count, ph, pw, pc):
  	pz = int(tot_element_count/(ph*pw))
  	arr = buff.reshape(pz, ph, pw, pc)
  	return(arr)
-
+'''
 def torch_shuffle(np_input, np_target):
 	torch_input     = torch.from_numpy(np_input)
 	torch_target    = torch.from_numpy(np_target)
@@ -210,3 +210,4 @@ def torch_shuffle(np_input, np_target):
 	shuff_np_out       = shuff_torch_target.cpu().numpy()
 
 	return (shuff_np_in, shuff_np_out)
+'''
