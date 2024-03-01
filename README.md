@@ -63,6 +63,7 @@ $ mpiexec -n 4 python main.py --input-folder 'raw_data' --output-fname $OUTPUT_F
 $ chmod +x demo_run.sh
 $ ./demo_run.sh "mpi_run"
 ```
+> > For more examples look through the file demo_run.sh.
 
 ## Results
 <br>
@@ -72,7 +73,6 @@ $ ./demo_run.sh "mpi_run"
 <img alt="img-name" src="/sanity_check/part_0/norm_None_patch_size_p55/hr_input_sub_img_rand_5748.png"><br>
 </div>
 
-> > For more examples look through the file demo_run.sh:
 
 ## Package requirements
 - Install mpicc compiler as:
