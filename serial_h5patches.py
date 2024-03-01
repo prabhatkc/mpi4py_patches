@@ -18,7 +18,9 @@ def makeh5patches(args):
 	if args.img_format != 'dicom':
 			print('WARNING. Ensure the img format for input-target pair and their sizes are acccurate in \n line 61 in file serial_h5patches.py.')
 	# reading all the image paths for given patients
-	all_dir_paths = sorted(glob.glob(args.input_folder+'/*/'))#/*/-> to enter sub-folders
+	if args.multi_patients: all_dir_paths= sorted(glob.glob(args.input_folder + '/*/'))
+	else:					all_dir_paths= sorted(glob.glob(args.input_folder))
+
 	all_input_paths, all_target_paths = [], []
 	
 	# allocating arrays for input/target min/max
@@ -46,6 +48,7 @@ def makeh5patches(args):
 	sub_label_of_all_labels = np.empty([0, args.label_size, args.label_size, 1])
 
 	#declaring path to save sanity check results
+	
 	sanity_chk_path = 'sanity_check/'+((args.input_folder).split('/'))[-1] + '/norm_' + str(args.normalization_type) + '_patch_size_' + str(args.patch_size)
 	if not os.path.isdir(sanity_chk_path): os.makedirs(sanity_chk_path)
 
@@ -107,8 +110,8 @@ def makeh5patches(args):
 			if (args.air_threshold): target_un_aug_images = utils.downsample_4r_augmentation(target_image_un)
 			if (i==0): 
 				print("\nDownscale based data augmentation is PERFORMED")
-				print("Also, each input-target image pair is downscaled by", \
-					 len(input_aug_images)-1,"different scaling factors due to downscale based augmentation")
+				#print("Also, each input-target image pair is downscaled by", \
+				#	 len(input_aug_images)-1,"different scaling factors due to downscale based augmentation")
 		else:
 			h, w = input_image.shape
 			input_aug_images = np.reshape(input_image, (1, h, w))
@@ -116,7 +119,7 @@ def makeh5patches(args):
 			if (args.air_threshold): target_un_aug_images = np.reshape(target_image_un, (1, h, w))
 			if(i==0): print("\nDownscale based data augmentation is NoT PERFORMED")
 		
-		# print(len(aug_images))
+		print(len(input_aug_images))
 		# Now working on each augmented images
 		for p in range(len(input_aug_images)): 
 
@@ -147,7 +150,7 @@ def makeh5patches(args):
 			#	add_rot_input, add_rot_label = sub_input, sub_label
 			sub_input_of_all_inputs = np.append(sub_input_of_all_inputs, augmented_input, axis=0)
 			sub_label_of_all_labels = np.append(sub_label_of_all_labels, augmented_label, axis=0)	
-
+		print(sub_input_of_all_inputs.shape)
 		#gf.multi2dplots(4, 8, sub_input_of_all_inputs[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*2, 4*2]})
 		#gf.multi2dplots(4, 8, sub_label_of_all_labels[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*2, 4*2]})
 		#sys.exit()

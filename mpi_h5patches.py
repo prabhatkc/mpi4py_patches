@@ -74,13 +74,12 @@ def makeh5patches_in_mpi(args):
 			sys.exit()
 		print('  ',len(all_target_paths),'LR-HR image pairs are processed by', nproc, \
 			'processors; with each rank processing', chunck, 'img-pairs')
-		'''
+	
 		print('\nTraining input image paths:')
 		print(all_input_paths)
 		print('\n\nTraining target image paths:')
 		print(all_target_paths)
-		print('blend factors before broadcast', blend_fact_arr)
-		'''
+		# print('blend factors before broadcast', blend_fact_arr)
 		# input-output variables from each rank
 		bcasted_input_data = {'all_target_paths': all_target_paths, 'all_input_paths': all_input_paths,\
 							  'chunck': chunck, 'nproc':nproc, 'blend_fact_arr': blend_fact_arr}
@@ -155,8 +154,12 @@ def makeh5patches_in_mpi(args):
 		#------------------------------------------------------
 		if args.sanity_plot_check:
 			# declaring path to save sanity check results
-			sanity_chk_path = 'sanity_check/'+((args.input_folder).split('/'))[-1] + '/norm_' + str(args.normalization_type) + '_patch_size_' + str(args.patch_size)
+			if args.multi_patients:
+				sanity_chk_path = 'sanity_check/'+ 'multiPatients/norm_' + str(args.normalization_type) + '_patch_size_' + str(args.patch_size)
+			else:
+				sanity_chk_path = 'sanity_check/'+((args.input_folder).split('/'))[-1] + '/norm_' + str(args.normalization_type) + '_patch_size_' + str(args.patch_size)
 			if not os.path.isdir(sanity_chk_path): os.makedirs(sanity_chk_path)
+			print("\n==>Folder-name for sanity check plots", sanity_chk_path)
 			window = 12
 			lr_N = len(sub_input_of_all_inputs)
 			rand_num=random.sample(range(lr_N-window), 5)

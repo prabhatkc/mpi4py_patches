@@ -29,7 +29,9 @@ parser.add_argument('--input-gen-folder', type=str, default='quarter_3mm_sharp_s
 parser.add_argument('--target-gen-folder', type=str, default='full_3mm_sharp_sorted', help="folder name containing clean (target) measurements")
 parser.add_argument('--img-format', type=str, default='dicom', help='image format for input and target images. Dicom/raw/tif?')
 parser.add_argument('--shuffle-patches', type=str, default=None, help='options include np_shuffle or none')
-parser.add_argument('--multi-patients', action='store_true', help='if there are multiple-subfolders related to different parents?')
+parser.add_argument('--multi-patients', action='store_true', help='if there are multiple-subfolders related to different parents')
+parser.add_argument('--scale', type=int, default=3, help='automatically downsamples input data folder by the scaling factor to degrade the \
+					input images as comparision to its target images')
 
 if __name__ == '__main__':
 
@@ -37,20 +39,20 @@ if __name__ == '__main__':
 	#-------------------------------------------------------------------------------------------------------------------------
 	# in-built additional options
 	#-------------------------------------------------------------------------------------------------------------------------
-	args.scale                      = 1 # for now all low dose and high dose complimentary pairs are of same scale and no upscaling/downscaling is required
-	padding_options                 = {'p96':12, 'p75':11, 'p64':4, 'p55':8, 'p42':6, 'p32':4, 'p24':4, 'p12':4}
+	# args.scale                      = 1 # for now all low dose and high dose complimentary pairs are of same scale and no upscaling/downscaling is required
+	padding_options                 = {'p96':12, 'p75':11, 'p64':4, 'p55':8, 'p54':12, 'p42':6, 'p32':4, 'p24':4, 'p12':4}
 	args.lr_padding                 = padding_options[args.patch_size]
-	patch_option                    = {'p96':[84 + args.lr_padding, 84 + args.lr_padding], 'p75':[64 + args.lr_padding, 64 + args.lr_padding], \
+	patch_option                    = {'p96':[84 + padding_options['p96'], 84 + padding_options['p96']], 'p75':[64 + args.lr_padding, 64 + args.lr_padding], \
 									   'p64':[60 + args.lr_padding, 60 + args.lr_padding], \
-									   'p55':[47 + args.lr_padding, 47 + args.lr_padding],  \
+									   'p55':[47 + args.lr_padding, 47 + args.lr_padding],  'p54':[42 + padding_options['p54'], 42 + padding_options['p54']], \
 									   'p42':[36 + args.lr_padding, 36 + args.lr_padding], 'p32':[28 + args.lr_padding, 28 + args.lr_padding],\
-									   'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
-	args.input_size, args.label_size= patch_option[args.patch_size]
+									   'p24':[20 + args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
+	args.input_size, args.label_size= int(patch_option[args.patch_size][0]/args.scale), patch_option[args.patch_size][1]
 	args.lr_stride                  = int(args.input_size - args.lr_padding)
 	args.channel                    = 1
 	
-	# the array type below is the precision type that MPI performs its operations after the read of data
-	# and up until saving the h5 patches. There is not much flexibity in changing the data type for 
+	# the  dtype below is the precision type that MPI performs its operations after the read of data
+	# and up until saving the h5 patches. There is not much flexiblity in changing the data type for 
 	# the MPI operations. Have a look at https://pages.tacc.utexas.edu/~eijkhout/pcse/html/mpi-data.html#Python
 	args.dtype                      = 'float32' 
 

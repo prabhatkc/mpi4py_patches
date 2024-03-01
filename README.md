@@ -1,4 +1,4 @@
-## mpi4py based feature extraction/patch generation for Deep Learning from CT images
+## mpi-based patch generation for training Deep Learning algorithms for CT applications (like denoising, image up-scale)
 
 ## Highlights
 
@@ -7,6 +7,8 @@
 (3) Includes rotation and scaling based augmentation<br>
 (4) Includes air thresholding to discard non-contrast regions<br>
 (5) Includes contrast blending based augmentation<br>
+(6) Includes patches generated via mixing patient data from different acquisitions<br>
+(7) Includes patches needed to train super-resolution algorithm (see main_sr.py)<br>
 
 ```
 usage: main.py [-h] --input-folder INPUT_FOLDER [--output-fname OUTPUT_FNAME] [--patch-size PATCH_SIZE]
@@ -45,20 +47,21 @@ optional arguments:
   --target-gen-folder   folder name containing clean (target) measurements
   --img-format          image format for input and target images.
   --shuffle-patches     options include np_shuffle or none
-
+  --multi-patients      if there are multiple-subfolders related to different
+                        parents?
 ``` 
 
 ## Example usage
 
 ```
-$ mpiexec -n 8 python main.py --input-folder './raw_data' --output-fname './results/training_patches.h5' \
---patch-size 'p55' --mpi_run --rot_augment --out-dtype 'float16' --ds_augment --air_threshold --dose_blend --nsplit 2 \
---input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted' --sanity_plot_check
+$ mpiexec -n 4 python main.py --input-folder 'raw_data' --output-fname $OUTPUT_FNAME --patch-size 'p55' --out-dtype 'float16' \
+  --air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
+  --input-gen-folder 'quarter_3mm_sharp_sorted' --target-gen-folder 'full_3mm_sharp_sorted' --multi-patients
 ```
 > > Instead you may choose to (modify &) execute patch generating bash file as:
 ```
 $ chmod +x demo_run.sh
-$ ./demo_run.sh
+$ ./demo_run.sh "mpi_run"
 ```
 
 ## Results
@@ -68,6 +71,8 @@ $ ./demo_run.sh
 <figcaption align = "left"><b>Target patches</b></figcaption><br>
 <img alt="img-name" src="/sanity_check/part_0/norm_None_patch_size_p55/hr_input_sub_img_rand_5748.png"><br>
 </div>
+
+> > For more examples look through the file demo_run.sh:
 
 ## Package requirements
 - Install mpicc compiler as:

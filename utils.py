@@ -96,7 +96,7 @@ def interpolation_lr(hr_image, scale):
 def add_blurr_n_noise(input_, seed):
 
   if (seed == 1):
-    #adding blurr
+    # adding blurr
     corrupted    = cv2.blur(input_, (3,3))
  
   elif (seed ==2):
@@ -195,7 +195,7 @@ def rotation_based_augmentation(args, sub_input, sub_label):
   # instances
   # sub_input is of shape [chunk_size, input_size, input_size, 1]
   rotated_all_inputs = np.empty([0, args.input_size, args.input_size, 1])
-  rotated_all_labels =   np.empty([0, args.label_size, args.label_size, 1])
+  rotated_all_labels = np.empty([0, args.label_size, args.label_size, 1])
   
   #print("inside rotation subroutine", sub_input.shape, sub_label.shape)
   #sys.exit()

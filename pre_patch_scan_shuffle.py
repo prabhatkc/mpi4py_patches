@@ -13,6 +13,7 @@ parser.add_argument('--input-gen-folder', type=str, default='quarter_3mm', help=
 parser.add_argument('--target-gen-folder', type=str, default='full_3mm', help="folder name containing clean (target) measurements")
 parser.add_argument('--file-extension', type=str, default='.IMA', help="extension name of training images")
 parser.add_argument('--nsplit', type=int, default=1, help="no of splits of the output folder")
+parser.add_argument('--multi-patients', action='store_true', help='if there are multiple-subfolders related to different parents?')
 
 args = parser.parse_args()
 
@@ -54,8 +55,8 @@ placeholder_fld = 'placeholder'
 if not os.path.isdir(placeholder_fld): os.makedirs(placeholder_fld)
 
 if args.nsplit ==1:
-	input_final_dest = os.path.join(args.output_folder, 'all_patient', args.input_gen_folder)
-	target_final_dest = os.path.join(args.output_folder,'all_patient', args.target_gen_folder)
+	input_final_dest = os.path.join(args.output_folder, 'mx_data', args.input_gen_folder)
+	target_final_dest = os.path.join(args.output_folder,'mx_data', args.target_gen_folder)
 	if not os.path.isdir(input_final_dest): os.makedirs(input_final_dest)
 	if not os.path.isdir(target_final_dest): os.makedirs(target_final_dest)
 
@@ -68,8 +69,8 @@ else:
 	split_shuff_target_path =np.array_split(shuff_target_paths, args.nsplit)
 
 	for iSp in range(args.nsplit):
-		input_final_dest = os.path.join(args.output_folder, 'part_' + str(iSp), 'all_patient', args.input_gen_folder)
-		target_final_dest = os.path.join(args.output_folder, 'part_' + str(iSp), 'all_patient', args.target_gen_folder)
+		input_final_dest = os.path.join(args.output_folder, 'part_' + str(iSp), 'mx_data', args.input_gen_folder)
+		target_final_dest = os.path.join(args.output_folder, 'part_' + str(iSp), 'mx_data', args.target_gen_folder)
 		if not os.path.isdir(input_final_dest): os.makedirs(input_final_dest)
 		if not os.path.isdir(target_final_dest): os.makedirs(target_final_dest)
 		

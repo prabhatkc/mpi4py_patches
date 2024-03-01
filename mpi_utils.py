@@ -6,26 +6,27 @@ import glob
 import utils
 
 import glob_funcs as gf
+import random
 # import torch
 
 def img_paths4rm_training_directory(args):
-  # return paths of target images from input_folder with 
-  # sub-directories. Each with target images for SR
-  # if random_N is True: It returns random N images' paths
+	# return paths of target images from input_folder with 
+	# sub-directories. Each with target images for SR
+	# if random_N is True: It returns random N images' paths
+	if args.multi_patients: all_dir_paths = sorted(glob.glob(args.input_folder + '/*/'))
+	else:					all_dir_paths = sorted(glob.glob(args.input_folder))
 
-  all_dir_paths = sorted(glob.glob(args.input_folder+'/*/'))
-  all_input_paths, all_target_paths = [], []
-  random_ind = None
-  
-  for dir_paths in all_dir_paths:
-    if args.random_N: random_ind = utils.get_sorted_random_ind(os.path.join(dir_paths, args.input_gen_folder), args.N_rand_imgs)
+	all_input_paths, all_target_paths = [], []
+	random_ind = None
 
-    in_paths = utils.getimages4rmdir(os.path.join(dir_paths, args.input_gen_folder), random_ind)
-    all_input_paths.extend(in_paths)
-    target_paths = utils.getimages4rmdir(os.path.join(dir_paths, args.target_gen_folder), random_ind)
-    all_target_paths.extend(target_paths)
-  
-  return (np.asarray(all_input_paths), np.asarray(all_target_paths))
+	for dir_paths in all_dir_paths:
+		if args.random_N: random_ind = utils.get_sorted_random_ind(os.path.join(dir_paths, args.input_gen_folder), args.N_rand_imgs)
+
+		in_paths = utils.getimages4rmdir(os.path.join(dir_paths, args.input_gen_folder), random_ind)
+		all_input_paths.extend(in_paths)
+		target_paths = utils.getimages4rmdir(os.path.join(dir_paths, args.target_gen_folder), random_ind)
+		all_target_paths.extend(target_paths)
+	return (np.asarray(all_input_paths), np.asarray(all_target_paths))
 
 def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 	chunck 		     = bcasted_input_data['chunck']
@@ -46,14 +47,16 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 		if args.img_format == 'dicom':
 			input_image  = gf.pydicom_imread(all_input_paths[pid*chunck+j])
 			target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
-			input_image  = input_image[33:455]
-			target_image = target_image[33:455]
-		else:
+			# input_image  = input_image[33:455]
+			# target_image = target_image[33:455]
+		elif args.img_format == 'dicom-raw':
 			# to account for the fact that realistic dose simulation output were sized [424, 512]
 			input_image  = gf.raw_imread(all_input_paths[pid*chunck+j], (424, 512), 'uint16')
 			target_image = gf.pydicom_imread(all_target_paths[pid*chunck+j])
 			target_image = target_image[31:455] 
-
+		else:
+			print('add reading function as per your input image format in partition_read_normalize_n_augment in mpi_utils.')
+			sys.exit()
 		sp = target_image.shape
 
 		# --------------------------------
@@ -65,9 +68,13 @@ def partition_read_normalize_n_augment(args, bcasted_input_data, pid):
 			target_image = (target_image[:, :, 0])
 		
 		if(pid==0 and j==0): 
+			print('')
 			print('==>Here images from training dataset is of type-', target_image.dtype, end='.')
 			print(' And is assigned as-', (target_image.astype(args.dtype)).dtype,'for the network training.')
-			print('==>Here input images are sampled from', args.input_gen_folder, 'and are sized', input_image.shape, end='.')
+			if args.scale==1:
+				print('==>Here input images are sampled from', args.input_gen_folder, 'and are sized', input_image.shape, end='.')
+			else:
+				print('==>Here input images are sampled from', args.input_gen_folder, 'and are down-sized to (', input_image.shape[0]/args.scale, ',', input_image.shape[1]/args.scale, ') using interpolation', end='.')
 	
 		target_image = target_image.astype(args.dtype)
 		input_image  = input_image.astype(args.dtype)
@@ -134,30 +141,28 @@ def augment_n_return_patch(args, input_image, target_image, i, pid, blend_factor
 	for p in range(len(input_aug_images)):
 		label_ = (target_aug_images[p])
 		input_ = (input_aug_images[p])
-		if (args.air_threshold):un_label_ = target_un_aug_images[p]
-		''' 
+		
 		#adding noise and downscaling the input images as instructed
 		label_ = utils.modcrop(target_aug_images[p], args.scale)
 		input_ = utils.modcrop(input_aug_images[p], args.scale)
-		Add additional blurr ... bicubic init here 
-		if args.scale ==1:
-			cinput_ = input_
-		else:
-			cinput_ = utils.interpolation_lr(input_, args.scale)
+		if (args.air_threshold):un_label_ = target_un_aug_images[p]
 
+		if args.scale ==1: input_ = input_
+		else:			   input_ = utils.interpolation_lr(input_, args.scale)
 		# if bicubic initilization is applied to input images
 		# as in the case of SRCNN model
-		if args.bicubic_init:
-			cinput_ = utils.interpolation_hr(cinput_, args.scale)
-		
-	
-		cinput_ = utils.add_blurr_n_noise(input_, seed[i])
-		print('seed=', seed[i])
-		if (pid==0 and i==0):
-			gf.plot2dlayers(cinput_, title='input')
-			gf.plot2dlayers(label_, title='target')
-		'''
-		cinput_ = input_
+		# if args.bicubic_init:
+		#	cinput_ = utils.interpolation_hr(cinput_, args.scale)
+			
+		if args.blurr_n_noise: cinput_ = utils.add_blurr_n_noise(input_, seed[i])
+		else:				   cinput_ = input_
+		# print('seed=', seed[i])
+		# if (pid==0 and i==0):
+		#	print('scale', args.scale, 'input shape', cinput_.shape, 'target shape', label_.shape)
+		#	gf.plot2dlayers(cinput_, title='input')
+		#	gf.plot2dlayers(label_, title='target')
+
+		# cinput_ = input_
 		sub_input, sub_label = utils.overlap_based_sub_images(args, cinput_, label_)
 		
 		if(args.air_threshold):
@@ -180,9 +185,16 @@ def augment_n_return_patch(args, input_image, target_image, i, pid, blend_factor
 	
 	'''
 	if(i==0 and pid ==0):
+		window = 32
+		lr_N = len(each_img_input_patch)
+		rand_num=random.sample(range(lr_N-window), 1)
+		s_ind  = rand_num[0]
+		e_ind  =  s_ind+window
 		print('shape of first img from processor', pid, ':', each_img_input_patch.shape, each_img_target_patch.shape, each_img_input_patch.dtype, each_img_target_patch.dtype)
-		gf.multi2dplots(4, 8, each_img_input_patch[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*args.scale, 4*args.scale]})
-		gf.multi2dplots(4, 8, each_img_target_patch[0:66, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*args.scale, 4*args.scale]})
+		#gf.multi2dplots(4, 8, each_img_input_patch[s_ind:e_ind, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*args.scale, 4*args.scale]})
+		#gf.multi2dplots(4, 8, each_img_target_patch[s_ind:e_ind, :, :, 0], 0, passed_fig_att = {"colorbar": False, "figsize":[4*args.scale, 4*args.scale]})
+		gf.dict_plot_of_2d_arr(4, 8, each_img_input_patch[s_ind:e_ind, :, :, 0], save_plot=False, disp_plot=True, output_path='')
+		gf.dict_plot_of_2d_arr(4, 8, each_img_target_patch[s_ind:e_ind, :, :, 0], save_plot=False, disp_plot=True, output_path='')
 		sys.exit()
 	'''
 	return(each_img_input_patch, each_img_target_patch)

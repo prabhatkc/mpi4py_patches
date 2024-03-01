@@ -33,6 +33,30 @@ def pydicom_imread(path):
   input_image = pydicom.dcmread(path)
   return(input_image.pixel_array.astype('float32'))
 
+def plot2dlayers(arr, xlabel=None, ylabel=None, title=None, cmap=None, colorbar=True):
+    """
+    'brg' is the best colormap for reb-green-blue image
+    'brg_r': in 'brg' colormap green color area will have
+        high values whereas in 'brg_r' blue area will have
+        the highest values
+    """
+    if xlabel is None:
+        xlabel=''
+    if ylabel is None:
+        ylabel=''
+    if title is None:
+        title=''
+    if cmap is None:
+        cmap='Greys_r'
+    plt.imshow(arr, cmap=cmap)
+    cb = plt.colorbar()
+    if colorbar is False:
+      cb.remove()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.show()
+
 def multi2dplots(nrows, ncols, fig_arr, axis, passed_fig_att=None):
     """
       gf.multi2dplots(1, 2, lena_stack, axis=0, passed_fig_att={'colorbar': False, 'split_title': np.asanyarray(['a','b']),'out_path': 'last_lr.tif'})
@@ -91,3 +115,16 @@ def raw_imread(path, shape=(256, 256), dtype='int16'):
   input_image = np.fromfile(path, dtype=dtype).astype('float32')
   input_image = input_image.reshape(shape)
   return(input_image)
+
+def dict_plot_of_2d_arr(rows, cols, arr_2d, cmap='Greys_r', save_plot=False, disp_plot=False, output_path=''):
+  # rows, cols indicate number of subplots along rows & columns
+  # rows*cols = len(arr_2d)
+  plt.figure(figsize=(14, 10))
+  for i, comp in enumerate(arr_2d):
+      plt.subplot(rows, cols, i + 1)
+      plt.imshow(comp, cmap=cmap, interpolation="nearest")
+      plt.xticks(())
+      plt.yticks(())
+  plt.subplots_adjust(0.08, 0.02, 0.92, 0.85, 0.08, 0.23)
+  if save_plot: plt.savefig(output_path)
+  if disp_plot: plt.show()
