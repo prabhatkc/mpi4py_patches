@@ -66,6 +66,10 @@ then
   --air_threshold --ds_augment --rot_augment --mpi_run --sanity_plot_check --dose_blend --nsplit 2 \
   --input-gen-folder 'quarter_3mm' --target-gen-folder 'full_3mm' --shuffle-patches 'np_shuffle'
 
+# ----------------------------------------------------------
+# for generating input low resolution patches for training
+# SuperResolution-based DL algorithms
+# ----------------------------------------------------------
 elif [[ "$cmd_opt" == "$cmd_opt4" ]]
 then 
   OUTPUT_FNAME='./sr_mpi_patches/p96_sr_patches.h5' 
