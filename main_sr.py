@@ -16,7 +16,8 @@ parser.add_argument('--random_N',        action="store_true", help="extracts ran
 					input - target folders. For more info refer to in-built options")
 parser.add_argument('--rot_augment', 	 action='store_true', help='employs rotation-based augmentation')
 parser.add_argument('--ds_augment',      action="store_true", help="incorperate downscale based data augmentation")
-parser.add_argument('--air_threshold',   action='store_true', help='removes patches devoid of contrast')
+parser.add_argument('--air_threshold',   action='store_true', help='removes patches devoid of contrast. To change threshold values look\
+                                                                    in the function air_thresholding in the file utils.py')
 parser.add_argument('--blurr_n_noise',   action='store_true', help="whether or not you want to add noise and blurr input data. \
                                                               Non-funtional in for the mpi-run. Only works in serial run (for now).")
 parser.add_argument('--mpi_run', 		 action='store_true', help='if you want to employ mpi-based parallel computation')

@@ -16,7 +16,8 @@ parser.add_argument('--random_N',        action="store_true", help="extracts ran
                     input - target folders. For more info refer to in-built options")
 parser.add_argument('--rot_augment', 	 action='store_true', help='employs rotation-based augmentation')
 parser.add_argument('--ds_augment',      action="store_true", help="incorperate downscale based data augmentation")
-parser.add_argument('--air_threshold',   action='store_true', help='removes patches devoid of contrast')
+parser.add_argument('--air_threshold',   action='store_true', help='removes patches devoid of contrast. To change threshold values look\
+                                                                    in the function air_thresholding in the file utils.py')
 parser.add_argument('--blurr_n_noise',   action='store_true', help="whether or not you want to add noise and blurr input data. \
                                                                     Non-funtional in for the mpi-run. Only works in serial run (for now).")
 parser.add_argument('--mpi_run', 		 action='store_true', help='if you want to employ mpi-based parallel computation')
@@ -41,10 +42,10 @@ if __name__ == '__main__':
 	padding_options                 = {'p96':12, 'p75':11, 'p64':4, 'p55':8, 'p42':6, 'p32':4, 'p24':4, 'p12':4}
 	args.lr_padding                 = padding_options[args.patch_size]
 	patch_option                    = {'p96':[84 + args.lr_padding, 84 + args.lr_padding], 'p75':[64 + args.lr_padding, 64 + args.lr_padding], \
-	                                    'p64':[60 + args.lr_padding, 60 + args.lr_padding], \
+	                                   'p64':[60 + args.lr_padding, 60 + args.lr_padding], \
 	                                   'p55':[47 + args.lr_padding, 47 + args.lr_padding],  \
 	                                   'p42':[36 + args.lr_padding, 36 + args.lr_padding], 'p32':[28 + args.lr_padding, 28 + args.lr_padding],\
-	                                    'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
+	                                   'p24':[20+args.lr_padding, 20+args.lr_padding], 'p12':[8+args.lr_padding, 8+args.lr_padding]} 
 	args.input_size, args.label_size= patch_option[args.patch_size]
 	args.lr_stride                  = int(args.input_size - args.lr_padding)
 	args.channel                    = 1

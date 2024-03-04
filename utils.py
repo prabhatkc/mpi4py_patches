@@ -310,7 +310,23 @@ def img_pair_normalization(input_image, target_image, normalization_type=None):
   return(out_input_image, out_target_image)
 
 def air_thresholding(args, sub_input, sub_label, sub_label_un):
-
+  """among patches where 
+  10% of (total no. of its pixel) is below pix thres values
+  &
+  the patch average is below mean threshold;
+  they will be air thresholded i.e., trashed out as not having
+  enough information for training Deep learning models.
+  
+  It might be advisable to change mean thres value depending on 
+  air values (total dark contrast). 
+  i.e. sometimes training data is not scaled and air is at its original
+  HU unit i.e., -1024 HU. Also, sometimes, pixel value of 25 in int8 image
+  or pixel value of >=100 in int16 image may correspond to air.
+  default CT values. 
+  pix_thresh   = 200 
+  count_thresh = int(0.1* (args.input_size**2))
+  mean_thresh  = 100 
+  """
   pix_thresh = 200
   count_thresh = int(0.1* (args.input_size**2))
   mean_thresh = 100
